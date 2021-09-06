@@ -4,7 +4,7 @@ const moment = require('moment');
 const { ethers } = require('ethers');
 const tweet = require('./tweet');
 const cache = require('./cache');
-const interval = 120
+const interval = 90
 const dotenv = require("dotenv")
 dotenv.config()
 
