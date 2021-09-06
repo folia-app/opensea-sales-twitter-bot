@@ -5,6 +5,8 @@ const { ethers } = require('ethers');
 const tweet = require('./tweet');
 const cache = require('./cache');
 const interval = 120
+const dotenv = require("dotenv")
+dotenv.config()
 
 // Format tweet text
 function formatAndSendTweet(event) {
@@ -33,14 +35,13 @@ function formatAndSendTweet(event) {
     // }
 
     // OPTIONAL PREFERENCE - if you want the tweet to include an attached image instead of just text
-    const imageUrl = _.get(event, ['asset', 'image_url']);
-    return tweet.tweetWithImage(tweetText, imageUrl);
+    // const imageUrl = _.get(event, ['asset', 'image_url']);
+    // return tweet.tweetWithImage(tweetText, imageUrl);
 
     return tweet.tweet(tweetText);
 }
 
-// Poll OpenSea every 120 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
-setInterval(() => {
+function pollOpenSea () {
     const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(interval - 1, "seconds").unix();
 
     console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
@@ -73,4 +74,10 @@ setInterval(() => {
     }).catch((error) => {
         console.error(error);
     });
-}, interval * 1000);
+}
+
+// poll at init
+pollOpenSea()
+
+// Poll OpenSea every 120 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
+setInterval(() => pollOpenSea(), interval * 1000);
