@@ -4,6 +4,7 @@ const moment = require('moment');
 const { ethers } = require('ethers');
 const tweet = require('./tweet');
 const cache = require('./cache');
+const interval = 120
 
 // Format tweet text
 function formatAndSendTweet(event) {
@@ -38,9 +39,9 @@ function formatAndSendTweet(event) {
     return tweet.tweet(tweetText);
 }
 
-// Poll OpenSea every 60 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
+// Poll OpenSea every 120 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
 setInterval(() => {
-    const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(59, "seconds").unix();
+    const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(interval - 1, "seconds").unix();
 
     console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
 
@@ -72,4 +73,4 @@ setInterval(() => {
     }).catch((error) => {
         console.error(error);
     });
-}, 60000);
+}, interval * 1000);
