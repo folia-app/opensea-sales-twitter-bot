@@ -48,7 +48,7 @@ function formatAndSendTweet(event) {
 function pollOpenSea () {
     const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(interval - 1, "seconds").unix();
 
-    console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
+    // console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
 
     axios.get('https://api.opensea.io/api/v1/events', {
         params: {
@@ -66,7 +66,7 @@ function pollOpenSea () {
             return new Date(created);
         })
 
-        console.log(`${events.length} sales since the last one...`);
+        console.log(`${events.length} sales since ${lastSaleTime}`);
 
         _.each(sortedEvents, (event) => {
             const created = _.get(event, 'created_date');
