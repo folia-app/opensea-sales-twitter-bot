@@ -35,9 +35,13 @@ function formatAndSendTweet(event) {
     // }
 
     // OPTIONAL PREFERENCE - if you want the tweet to include an attached image instead of just text
-    // const imageUrl = _.get(event, ['asset', 'image_url']);
-    // return tweet.tweetWithImage(tweetText, imageUrl);
-
+    const assetTokenId = _.get(event, ['asset', 'token_id']);
+    if (assetTokenId) {
+        // mutant garden image pattern (since SVG not supported from OS og:image)
+        const imageUrl = `https://seeder.mutant.garden/api/mutant/${assetTokenId}/raster/now`
+        return tweet.tweetWithImage(tweetText, imageUrl);    
+    }
+    
     return tweet.tweet(tweetText);
 }
 
