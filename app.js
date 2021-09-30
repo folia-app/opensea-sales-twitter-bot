@@ -10,74 +10,74 @@ dotenv.config()
 
 // Format tweet text
 function formatAndSendTweet(event) {
-    // Handle both individual items + bundle sales
-    const assetName = _.get(event, ['asset', 'name'], _.get(event, ['asset_bundle', 'name']));
-    const openseaLink = _.get(event, ['asset', 'permalink'], _.get(event, ['asset_bundle', 'permalink']));
+  // Handle both individual items + bundle sales
+  const assetName = _.get(event, ['asset', 'name'], _.get(event, ['asset_bundle', 'name']));
+  const openseaLink = _.get(event, ['asset', 'permalink'], _.get(event, ['asset_bundle', 'permalink']));
 
-    const totalPrice = _.get(event, 'total_price');
+  const totalPrice = _.get(event, 'total_price');
 
-    const tokenDecimals = _.get(event, ['payment_token', 'decimals']);
-    const tokenUsdPrice = _.get(event, ['payment_token', 'usd_price']);
-    const tokenEthPrice = _.get(event, ['payment_token', 'eth_price']);
+  const tokenDecimals = _.get(event, ['payment_token', 'decimals']);
+  const tokenUsdPrice = _.get(event, ['payment_token', 'usd_price']);
+  const tokenEthPrice = _.get(event, ['payment_token', 'eth_price']);
 
-    const formattedUnits = ethers.utils.formatUnits(totalPrice, tokenDecimals);
-    const formattedEthPrice = formattedUnits * tokenEthPrice;
-    const formattedUsdPrice = formattedUnits * tokenUsdPrice;
+  const formattedUnits = ethers.utils.formatUnits(totalPrice, tokenDecimals);
+  const formattedEthPrice = formattedUnits * tokenEthPrice;
+  const formattedUsdPrice = formattedUnits * tokenUsdPrice;
 
-    const tweetText = `${assetName} bought for ${formattedEthPrice}${ethers.constants.EtherSymbol} ($${Number(formattedUsdPrice).toFixed(2)}) ${openseaLink}`;
+  const tweetText = `${assetName} bought for ${formattedEthPrice}${ethers.constants.EtherSymbol} ($${Number(formattedUsdPrice).toFixed(2)}) #MGSsale ${openseaLink}`;
 
-    console.log(tweetText);
+  console.log(tweetText);
 
-    // OPTIONAL PREFERENCE - don't tweet out sales below X ETH (default is 1 ETH - change to what you prefer)
-    // if (Number(formattedEthPrice) < 1) {
-    //     console.log(`${assetName} sold below tweet price (${formattedEthPrice} ETH).`);
-    //     return;
-    // }
+  // OPTIONAL PREFERENCE - don't tweet out sales below X ETH (default is 1 ETH - change to what you prefer)
+  // if (Number(formattedEthPrice) < 1) {
+  //     console.log(`${assetName} sold below tweet price (${formattedEthPrice} ETH).`);
+  //     return;
+  // }
 
-    // OPTIONAL PREFERENCE - if you want the tweet to include an attached image instead of just text
-    const assetTokenId = _.get(event, ['asset', 'token_id']);
-    if (assetTokenId) {
-        // mutant garden image pattern (since SVG not supported from OS og:image)
-        const imageUrl = `https://seeder.mutant.garden/api/mutant/${assetTokenId}/raster/now`
-        return tweet.tweetWithImage(tweetText, imageUrl);    
-    }
-    
-    return tweet.tweet(tweetText);
+  // OPTIONAL PREFERENCE - if you want the tweet to include an attached image instead of just text
+  const assetTokenId = _.get(event, ['asset', 'token_id']);
+  if (assetTokenId) {
+    // mutant garden image pattern (since SVG not supported from OS og:image)
+    const imageUrl = `https://seeder.mutant.garden/api/mutant/${assetTokenId}/raster/now`
+    return tweet.tweetWithImage(tweetText, imageUrl);    
+  }
+  
+  return tweet.tweet(tweetText);
 }
 
 function pollOpenSea () {
-    const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(interval - 1, "seconds").unix();
+  const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(interval - 1, "seconds").unix();
 
-    // console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
+  // console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
 
-    axios.get('https://api.opensea.io/api/v1/events', {
-        params: {
-            collection_slug: process.env.OPENSEA_COLLECTION_SLUG,
-            event_type: 'successful',
-            occurred_after: lastSaleTime,
-            only_opensea: 'false'
-        }
-    }).then((response) => {
-        const events = _.get(response, ['data', 'asset_events']);
+  axios.get('https://api.opensea.io/api/v1/events', {
+    params: {
+      collection_slug: process.env.OPENSEA_COLLECTION_SLUG,
+      event_type: 'successful',
+      occurred_after: lastSaleTime,
+      only_opensea: 'false'
+    }
+  }).then((response) => {
+    const events = _.get(response, ['data', 'asset_events']);
 
-        const sortedEvents = _.sortBy(events, function(event) {
-            const created = _.get(event, 'created_date');
+    const sortedEvents = _.sortBy(events, function(event) {
+      const created = _.get(event, 'created_date');
 
-            return new Date(created);
-        })
+      return new Date(created);
+    })
 
-        console.log(`${events.length} sales since ${lastSaleTime}`);
+    console.log(`${events.length} sales since ${lastSaleTime}`);
 
-        _.each(sortedEvents, (event) => {
-            const created = _.get(event, 'created_date');
+    _.each(sortedEvents, (event) => {
+      const created = _.get(event, 'created_date');
 
-            cache.set('lastSaleTime', moment(created).unix());
+      cache.set('lastSaleTime', moment(created).unix());
 
-            return formatAndSendTweet(event);
-        });
-    }).catch((error) => {
-        console.error(error);
+      return formatAndSendTweet(event);
     });
+  }).catch((error) => {
+    console.error(error);
+  });
 }
 
 // poll at init
