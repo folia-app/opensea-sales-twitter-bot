@@ -24,7 +24,7 @@ function formatAndSendTweet(event) {
   const formattedEthPrice = formattedUnits * tokenEthPrice;
   const formattedUsdPrice = formattedUnits * tokenUsdPrice;
 
-  const tweetText = `${assetName} bought for ${formattedEthPrice}${ethers.constants.EtherSymbol} ($${Number(formattedUsdPrice).toFixed(2)}) #MGSsale ${openseaLink}`;
+  const tweetText = `#${assetName} bought for ${formattedEthPrice}${ethers.constants.EtherSymbol} ($${Number(formattedUsdPrice).toFixed(2)}) #MGSsale ${openseaLink}`;
 
   console.log(tweetText);
 
@@ -45,7 +45,7 @@ function formatAndSendTweet(event) {
   return tweet.tweet(tweetText);
 }
 
-function pollOpenSea () {
+function pollOpenSea (log = false) {
   const lastSaleTime = cache.get('lastSaleTime', null) || moment().startOf('minute').subtract(interval - 1, "seconds").unix();
 
   // console.log(`Last sale (in seconds since Unix epoch): ${cache.get('lastSaleTime', null)}`);
@@ -66,7 +66,9 @@ function pollOpenSea () {
       return new Date(created);
     })
 
-    console.log(`${events.length} sales since ${lastSaleTime}`);
+    if (log) {
+      console.log(`${events.length} sales since ${lastSaleTime}`);
+    }
 
     _.each(sortedEvents, (event) => {
       const created = _.get(event, 'created_date');
@@ -81,7 +83,9 @@ function pollOpenSea () {
 }
 
 // poll at init
-pollOpenSea()
+pollOpenSea(true)
 
 // Poll OpenSea every 120 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
 setInterval(() => pollOpenSea(), interval * 1000);
+
+console.log('began interval...')
