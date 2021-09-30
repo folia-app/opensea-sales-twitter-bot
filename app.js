@@ -88,4 +88,4 @@ pollOpenSea(true)
 // Poll OpenSea every 120 seconds & retrieve all sales for a given collection in either the time since the last sale OR in the last minute
 setInterval(() => pollOpenSea(), interval * 1000);
 
-console.log('began interval...')
+console.log(`polling every ${interval} seconds...`)
